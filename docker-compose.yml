@@ -1,0 +1,24 @@
+version: '3.4'
+
+services:
+  backendinternv2:
+    image: backendinternv2
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+    links:
+      - mongo
+  mongodb:
+    image: mongo:latest
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - data:/data/db
+
+volumes:
+  data:
