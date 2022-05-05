@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const { jwtSecret } = process.env;
 const logger = require('../lib/logger');
 const { body, validationResult, query, param } = require('express-validator');
+const villager = require('../models/villager');
+const agent = require('../models/agent');
+const bcrypt = require('bcryptjs');
 
 exports.auth = (req, res, next) => {
     try {
@@ -63,3 +66,29 @@ exports.midLogin = [
     body("email").isEmail().not().isEmpty(),
     body("password").isString().not().isEmpty()
 ]
+
+exports.reset = async (req, res, next) => {
+    try {
+        let { email, oldPass } = req.body;
+        const Vdata = await villager.findOne({ email: email });
+        const Adata = await agent.findOne({ email: email });
+        if (Vdata) {
+            let result = bcrypt.compareSync(oldPass, Vdata.password);
+            req.body["result"] = result;
+            req.body["key"] = 'V';
+            next();
+        } else if (Adata) {
+            let result = bcrypt.compareSync(oldPass, Adata.password);
+            req.body["key"] = 'A';
+            next();
+        } else {
+            if (!Vdata && !Adata) {
+                req.body["result"] = false;
+                next();
+            }
+        }
+    } catch (error) {
+        logger.error(error.massage);
+        return res.status(400).json({ message: error.message });
+    }
+}

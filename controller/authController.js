@@ -114,3 +114,32 @@ exports.Login = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 }
+
+
+exports.resetPassword = async (req, res) => {
+    try {
+        if (req.body.result) {
+            if (req.body.key === 'V') {
+                const salt = await bcrypt.genSalt(Number(SALT));
+                let newPass = await bcrypt.hash(req.body.newPass, salt);
+                const data = await Villager.findOne({ email: req.body.email }).then(doc => {
+                    doc.password = newPass
+                    doc.save();
+                });
+                return res.status(200).json({ massage: 'reset Villager password success.' });
+            } else {
+                const salt = await bcrypt.genSalt(Number(SALT));
+                let newPass = await bcrypt.hash(req.body.newPass, salt);
+                const data = await Agent.findOne({ email: req.body.email }).then(doc => {
+                    doc.password = newPass
+                    doc.save();
+                });
+                return res.status(200).json({ massage: 'reset Agent password success.' });
+            }
+        }
+        return res.status(400).json({ massage: 'bad' });
+    } catch (error) {
+        logger.error(error.massage);
+        return res.status(400).json({ message: error.message });
+    }
+} 
